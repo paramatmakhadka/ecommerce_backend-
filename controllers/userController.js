@@ -35,6 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
 			httpOnly: true,
 			secure: true,
 			sameSite: "none",
+			partitioned: true,
 			maxAge: 60 * 60 * 1000, // 1 hour
 		});
 
@@ -65,6 +66,7 @@ const authUser = asyncHandler(async (req, res) => {
 			httpOnly: true,
 			secure: true,
 			sameSite: "none",
+			partitioned: true,
 			maxAge: 60 * 60 * 1000, // 1 hour
 		});
 
@@ -140,6 +142,9 @@ const createUser = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res) => {
 	res.cookie("jwt", "", {
 		httpOnly: true,
+		secure: true,
+		sameSite: "none",
+		partitioned: true,
 		expires: new Date(0),
 	});
 	res.status(200).json({ message: "Logged out successfully" });

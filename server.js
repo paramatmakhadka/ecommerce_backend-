@@ -20,9 +20,9 @@ const startServer = async () => {
 	// Required for Render / proxies
 	app.set("trust proxy", 1);
 
-	/* ===============================
-	   CORS CONFIGURATION (ORB SAFE)
-	================================ */
+
+	   //CORS CONFIGURATION (ORB SAFE)
+
 
 	const allowedOrigins = [
 		process.env.FRONTEND_URL,
@@ -50,26 +50,20 @@ const startServer = async () => {
 		})
 	);
 
-	// 🔴 CRITICAL: handle preflight requests
+	// CRITICAL: handle preflight requests
 	app.options("*", cors());
 
-	/* ===============================
-	   MIDDLEWARE
-	================================ */
+//middleware
 
 	app.use(express.json());
 	app.use(cookieParser());
 
-	/* ===============================
-	   STATIC FILES
-	================================ */
+	//uploads
 
 	app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 	app.use("/images", express.static(path.join(__dirname, "uploads")));
 
-	/* ===============================
-	   ROUTES
-	================================ */
+//routes
 
 	app.use("/api/products", require("./routes/productRoutes"));
 	app.use("/api/users", require("./routes/userRoutes"));
@@ -79,10 +73,7 @@ const startServer = async () => {
 	app.use("/api/orders", require("./routes/orderRoutes"));
 	app.use("/api/coupons", require("./routes/couponRoutes"));
 
-	/* ===============================
-	   HEALTH CHECKS
-	================================ */
-
+//health check
 	app.get("/", (req, res) => {
 		res.send("API is running");
 	});
@@ -91,10 +82,7 @@ const startServer = async () => {
 		res.json({ status: "ok", time: new Date() });
 	});
 
-	/* ===============================
-	   ERROR HANDLER
-	================================ */
-
+//error handeling
 	app.use((err, req, res, next) => {
 		console.error(err.stack);
 		res.status(500).json({
@@ -103,9 +91,7 @@ const startServer = async () => {
 		});
 	});
 
-	/* ===============================
-	   START SERVER
-	================================ */
+	//run server
 
 	const PORT = process.env.PORT || 5000;
 	app.listen(PORT, () => {

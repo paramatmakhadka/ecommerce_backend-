@@ -8,72 +8,88 @@ const path = require("path");
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 const startServer = async () => {
-    const isConnected = await connectDB();
-    if (!isConnected) {
-        console.error("Stopping server due to DB connection failure.");
-        process.exit(1);
-    }
+	const isConnected = await connectDB();
+	if (!isConnected) {
+		console.error("Stopping server due to DB connection failure.");
+		process.exit(1);
+	}
 
-    const app = express();
-    
-    // Dynamic CORS configuration
-    const allowedOrigins = [
-        process.env.FRONTEND_URL,
-        "http://localhost:3000",
-        "http://localhost:5173"
-    ].filter(Boolean);
+	const app = express();
 
-    app.use(cors({
-        origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps or curl requests)
-            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-                callback(null, true);
-            } else {
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
-        credentials: true
-    }));
-    app.use(express.json());
-    app.use(cookieParser());
+	const allowedOrigins = [
+		process.env.FRONTEND_URL,
+		"http://localhost:3000",
+		"http://localhost:5173",
+		"https://ecommerce-kappa-blue-10.vercel.app",
+		"https://ecommerce-kappa-blue-10.vercel.app/",
+	].filter(Boolean);
 
-    // Serve uploaded files
-    app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+	app.use(
+		cors({
+			origin: function (origin, callback) {
+				// Allow requests with no origin (like mobile apps or curl requests)
+				if (!origin) return callback(null, true);
 
-    const productRoutes = require("./routes/productRoutes");
-    app.use("/api/products", productRoutes);
+				// Check if origin is in the allowed list
+				const isAllowed = allowedOrigins.some((allowedOrigin) => {
+					// Remove trailing slash for comparison
+					const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
+					const normalizedOrigin = origin.replace(/\/$/, "");
+					return normalizedAllowed === normalizedOrigin;
+				});
 
-    const userRoutes = require("./routes/userRoutes");
-    app.use("/api/users", userRoutes);
+				if (isAllowed) {
+					callback(null, true);
+				} else {
+					console.log("Origin rejected by CORS:", origin);
+					callback(new Error("Not allowed by CORS"));
+				}
+			},
+			credentials: true,
+			methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+			allowedHeaders: ["Content-Type", "Authorization"],
+		}),
+	);
+	app.use(express.json());
+	app.use(cookieParser());
 
-    const uploadRoutes = require("./routes/uploadRoutes");
-    app.use("/api/upload", uploadRoutes);
+	// Serve uploaded files
+	app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-    const adminRoutes = require("./routes/adminRoutes");
-    app.use("/api/admin", adminRoutes);
+	const productRoutes = require("./routes/productRoutes");
+	app.use("/api/products", productRoutes);
 
-    const categoryRoutes = require("./routes/categoryRoutes");
-    app.use("/api/categories", categoryRoutes);
+	const userRoutes = require("./routes/userRoutes");
+	app.use("/api/users", userRoutes);
 
-    const orderRoutes = require("./routes/orderRoutes");
-    app.use("/api/orders", orderRoutes);
+	const uploadRoutes = require("./routes/uploadRoutes");
+	app.use("/api/upload", uploadRoutes);
 
-    const couponRoutes = require("./routes/couponRoutes");
-    app.use("/api/coupons", couponRoutes);
+	const adminRoutes = require("./routes/adminRoutes");
+	app.use("/api/admin", adminRoutes);
 
-    app.get("/", (req, res) => res.send("API is running"));
+	const categoryRoutes = require("./routes/categoryRoutes");
+	app.use("/api/categories", categoryRoutes);
 
-    // Error handling middleware
-    app.use((err, req, res, next) => {
-        console.error(err.stack);
-        res.status(500).json({
-            message: err.message,
-            stack: process.env.NODE_ENV === "production" ? null : err.stack,
-        });
-    });
+	const orderRoutes = require("./routes/orderRoutes");
+	app.use("/api/orders", orderRoutes);
 
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+	const couponRoutes = require("./routes/couponRoutes");
+	app.use("/api/coupons", couponRoutes);
+
+	app.get("/", (req, res) => res.send("API is running"));
+
+	// Error handling middleware
+	app.use((err, req, res, next) => {
+		console.error(err.stack);
+		res.status(500).json({
+			message: err.message,
+			stack: process.env.NODE_ENV === "production" ? null : err.stack,
+		});
+	});
+
+	const PORT = process.env.PORT || 5000;
+	app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 };
 
 startServer();

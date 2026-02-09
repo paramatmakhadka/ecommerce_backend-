@@ -7,7 +7,17 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const { protect, admin } = require("../middleware/authMiddleware");
 
+const { createUser } = require("../controllers/userController");
 const Coupon = require("../models/couponModel");
+
+// GET /api/admin/users - list users (admin only)
+router
+	.route("/users")
+	.get(protect, admin, async (req, res) => {
+		const users = await User.find({}).select("-password");
+		res.json(users);
+	})
+	.post(protect, admin, createUser);
 
 // GET /api/admin/stats - dashboard summary
 router.get(

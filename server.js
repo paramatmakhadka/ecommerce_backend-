@@ -15,6 +15,7 @@ const startServer = async () => {
 	}
 
 	const app = express();
+	app.set("trust proxy", 1);
 
 	const allowedOrigins = [
 		process.env.FRONTEND_URL,
@@ -27,21 +28,15 @@ const startServer = async () => {
 	app.use(
 		cors({
 			origin: function (origin, callback) {
-				// Allow requests with no origin (like mobile apps or curl requests)
 				if (!origin) return callback(null, true);
-
-				// Check if origin is in the allowed list
-				const isAllowed = allowedOrigins.some((allowedOrigin) => {
-					// Remove trailing slash for comparison
-					const normalizedAllowed = allowedOrigin.replace(/\/$/, "");
-					const normalizedOrigin = origin.replace(/\/$/, "");
-					return normalizedAllowed === normalizedOrigin;
-				});
-
+				const normalizedOrigin = origin.replace(/\/$/, "");
+				const isAllowed = allowedOrigins.some(
+					(o) => o?.replace(/\/$/, "") === normalizedOrigin,
+				);
 				if (isAllowed) {
 					callback(null, true);
 				} else {
-					console.log("Origin rejected by CORS:", origin);
+					console.log("CORS Rejected:", origin);
 					callback(new Error("Not allowed by CORS"));
 				}
 			},
@@ -79,6 +74,9 @@ const startServer = async () => {
 	app.use("/api/coupons", couponRoutes);
 
 	app.get("/", (req, res) => res.send("API is running"));
+	app.get("/api/health", (req, res) =>
+		res.json({ status: "ok", time: new Date() }),
+	);
 
 	// Error handling middleware
 	app.use((err, req, res, next) => {

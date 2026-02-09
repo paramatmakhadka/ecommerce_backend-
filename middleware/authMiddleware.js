@@ -1,47 +1,44 @@
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
 
-const protect = asyncHandler(async (req, res, next) => {
-	let token;
+// Protect routes middleware
+const protect = (req, res, next) => {
+	try {
+		const token = req.cookies.jwt; // read from cookie
 
-	token = req.cookies.jwt;
-
-	if (token) {
-		try {
-			const decoded = jwt.verify(token, process.env.JWT_SECRET);
-			req.user = await User.findById(decoded.id).select("-password");
-			next();
-		} catch (error) {
-			res.status(401);
-			throw new Error("Not authorized, token failed");
+		if (!token) {
+			return res.status(401).json({ message: "Not authorized, token missing" });
 		}
-	} else if (
-		req.headers.authorization &&
-		req.headers.authorization.startsWith("Bearer")
-	) {
-		try {
-			token = req.headers.authorization.split(" ")[1];
-			const decoded = jwt.verify(token, process.env.JWT_SECRET);
-			req.user = await User.findById(decoded.id).select("-password");
-			next();
-		} catch (error) {
-			res.status(401);
-			throw new Error("Not authorized, token failed");
-		}
-	} else {
-		res.status(401);
-		throw new Error("Not authorized, no token");
-	}
-});
 
-const admin = (req, res, next) => {
-	if (req.user && req.user.isAdmin) {
+		// Verify JWT
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		req.user = decoded; // attach user info to request
 		next();
-	} else {
-		res.status(401);
-		throw new Error("Not authorized as an admin");
+	} catch (err) {
+		console.error("JWT Error:", err.message);
+		res.status(401).json({ message: "Not authorized, token invalid" });
 	}
 };
 
-module.exports = { protect, admin };
+// For admin-only routes
+const admin = (req, res, next) => {
+	if (req.user && req.user.role === "admin") {
+		next();
+	} else {
+		res.status(403).json({ message: "Admin access only" });
+	}
+};
+
+// Function to set JWT cookie (login route)
+const setTokenCookie = (res, token) => {
+	const isProd = process.env.NODE_ENV === "production";
+
+	res.cookie("jwt", token, {
+		httpOnly: true,             // JS cannot access
+		secure: isProd,             // HTTPS only
+		sameSite: isProd ? "none" : "lax", // cross-site safe
+		partitioned: isProd,        // Chrome future-proof
+		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+	});
+};
+
+module.exports = { protect, admin, setTokenCookie };

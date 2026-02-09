@@ -12,7 +12,7 @@ const { protect, admin } = require("../middleware/authMiddleware");
 router.route("/").get(getCategories).post(protect, admin, createCategory);
 router
 	.route("/:id")
-	.get(protect, admin, getCategoryById)
+	.get(getCategoryById)
 	.put(protect, admin, updateCategory)
 	.delete(protect, admin, deleteCategory);
 

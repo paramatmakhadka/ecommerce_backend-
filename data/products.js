@@ -1,7 +1,7 @@
 const products = [
 	{
 		name: "Sample Product 1",
-		image: "/images/sample1.jpg",
+		image: "/uploads/sample1.jpg",
 		description: "High quality product 1",
 		brand: "Brand A",
 		category: "Category 1",
@@ -10,7 +10,7 @@ const products = [
 	},
 	{
 		name: "Sample Product 2",
-		image: "/images/sample2.jpg",
+		image: "/uploads/sample2.jpg",
 		description: "High quality product 2",
 		brand: "Brand B",
 		category: "Category 2",

@@ -55,6 +55,7 @@ const startServer = async () => {
 
 	// Serve uploaded files
 	app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+	app.use("/images", express.static(path.join(__dirname, "uploads")));
 
 	const productRoutes = require("./routes/productRoutes");
 	app.use("/api/products", productRoutes);
